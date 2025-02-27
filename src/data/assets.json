@@ -1,12 +1,1 @@
-[
-  {
-    "name": "the Tata stock",
-    "type": "stock",
-    "value": 731.75,
-    "description": "this is tata company stock",
-    "userId": "2b1d4733-97a3-4d1b-8b98-6b57edccdd62",
-    "id": "c8b99938-52ec-40dd-ab64-e87a58acfa94",
-    "createdAt": "2025-02-26T10:55:25.913Z",
-    "updatedAt": "2025-02-26T11:01:18.066Z"
-  }
-]
+[]
