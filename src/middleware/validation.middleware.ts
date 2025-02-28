@@ -1,8 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { body, validationResult } from 'express-validator';
-import { AssetType } from '../types/asset.types';
 
-// Helper function to check for validation errors
 const handleValidationErrors = (req: Request, res: Response, next: NextFunction): void => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -12,7 +10,6 @@ const handleValidationErrors = (req: Request, res: Response, next: NextFunction)
   next();
 };
 
-// Validation rules for user registration
 export const validateRegister = [
   body('username')
     .notEmpty().withMessage('Username is required')
@@ -26,7 +23,6 @@ export const validateRegister = [
   handleValidationErrors,
 ];
 
-// Validation rules for user login
 export const validateLogin = [
   body('email')
     .notEmpty().withMessage('Email is required')
@@ -36,7 +32,6 @@ export const validateLogin = [
   handleValidationErrors,
 ];
 
-// Validation rules for asset creation
 export const validateAssetCreation = [
   body('name')
     .notEmpty().withMessage('Asset name is required')
@@ -55,7 +50,6 @@ export const validateAssetCreation = [
   handleValidationErrors,
 ];
 
-// Validation rules for asset update
 export const validateAssetUpdate = [
   body('name')
     .optional()
@@ -74,7 +68,6 @@ export const validateAssetUpdate = [
   handleValidationErrors,
 ];
 
-// Validation rules for query parameters
 export const validateAssetQuery = [
   body('search')
     .optional()

@@ -10,10 +10,7 @@ const config = {
     assets: 'src/data/assets.json',
   },
   mongodb: {
-    uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/asset-mgmt-db',
-    options: {
-      // Optional additional connection options
-    }
+    uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/asset-mgmt-db'
   },
   jwt: {
     SECRET: "LJKKJSDFKLJKK*&*234234234",

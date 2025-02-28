@@ -1,6 +1,4 @@
-// src/services/asset.service.ts
 import { Types } from 'mongoose';
-// import AssetModel from '../models/asset.model';
 import AssetModel from '../models/asset.model';
 import { Asset, CreateAssetDTO, UpdateAssetDTO, AssetQueryParams } from '../types/asset.types';
 
@@ -12,15 +10,12 @@ class AssetService {
    * @returns Filtered assets
    */
   async getAllAssets(userId: string, queryParams: AssetQueryParams = {}): Promise<Asset[]> {
-    // Build query
     const query: any = { userId };
     
-    // Add type filter if provided
     if (queryParams.type) {
       query.type = queryParams.type;
     }
     
-    // Add value range filters if provided
     if (queryParams.minValue !== undefined || queryParams.maxValue !== undefined) {
       query.value = {};
       if (queryParams.minValue !== undefined) {
@@ -31,7 +26,6 @@ class AssetService {
       }
     }
     
-    // Text search if provided
     let findQuery = AssetModel.find(query);
     if (queryParams.search) {
       findQuery = AssetModel.find(
@@ -44,21 +38,17 @@ class AssetService {
       );
     }
     
-    // Apply sorting
     if (queryParams.sortBy) {
       const sortOrder = queryParams.sortOrder === 'desc' ? -1 : 1;
       const sortOptions: any = {};
       sortOptions[queryParams.sortBy] = sortOrder;
       findQuery = findQuery.sort(sortOptions);
     } else {
-      // Default sort by updatedAt descending
       findQuery = findQuery.sort({ updatedAt: -1 });
     }
     
-    // Execute query
     const assets = await findQuery.exec();
     
-    // Return assets with correct interface (converting _id to id)
     return assets.map(asset => this.mapAssetDocument(asset));
   }
 

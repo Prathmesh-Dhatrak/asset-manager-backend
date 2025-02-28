@@ -1,4 +1,3 @@
-// src/middleware/auth.middleware.ts
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import config from '../config/app.config';
@@ -21,10 +20,8 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
       return;
     }
     
-    // Verify token
     const decoded = jwt.verify(token, config.jwt.SECRET) as TokenPayload;
     
-    // Attach user to request
     req.user = {
       id: decoded.id,
       email: decoded.email

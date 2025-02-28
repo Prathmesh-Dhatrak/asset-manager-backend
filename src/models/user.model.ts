@@ -1,4 +1,3 @@
-// src/models/user.model.ts
 import mongoose, { Schema, Document } from 'mongoose';
 import { User } from '../types/user.types';
 
