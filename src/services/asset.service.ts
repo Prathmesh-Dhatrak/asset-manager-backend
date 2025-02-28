@@ -1,11 +1,8 @@
-import fileService from './file.service';
-import config from '../config/app.config';
-import { filterAssets } from '../utils/filter.utils';
+import { Types } from 'mongoose';
+import AssetModel from '../models/asset.model';
 import { Asset, CreateAssetDTO, UpdateAssetDTO, AssetQueryParams } from '../types/asset.types';
 
 class AssetService {
-  private readonly assetFilePath = config.dataPath.assets;
-
   /**
    * Gets all assets for a user with optional filtering
    * @param userId User ID
@@ -13,14 +10,46 @@ class AssetService {
    * @returns Filtered assets
    */
   async getAllAssets(userId: string, queryParams: AssetQueryParams = {}): Promise<Asset[]> {
-    // Get all assets for the user
-    const assets = await fileService.query<Asset>(
-      this.assetFilePath,
-      (asset) => asset.userId === userId
-    );
+    const query: any = { userId };
     
-    // Apply filters and sorting
-    return filterAssets(assets, queryParams);
+    if (queryParams.type) {
+      query.type = queryParams.type;
+    }
+    
+    if (queryParams.minValue !== undefined || queryParams.maxValue !== undefined) {
+      query.value = {};
+      if (queryParams.minValue !== undefined) {
+        query.value.$gte = queryParams.minValue;
+      }
+      if (queryParams.maxValue !== undefined) {
+        query.value.$lte = queryParams.maxValue;
+      }
+    }
+    
+    let findQuery = AssetModel.find(query);
+    if (queryParams.search) {
+      findQuery = AssetModel.find(
+        {
+          $and: [
+            { userId },
+            { $text: { $search: queryParams.search } }
+          ]
+        }
+      );
+    }
+    
+    if (queryParams.sortBy) {
+      const sortOrder = queryParams.sortOrder === 'desc' ? -1 : 1;
+      const sortOptions: any = {};
+      sortOptions[queryParams.sortBy] = sortOrder;
+      findQuery = findQuery.sort(sortOptions);
+    } else {
+      findQuery = findQuery.sort({ updatedAt: -1 });
+    }
+    
+    const assets = await findQuery.exec();
+    
+    return assets.map(asset => this.mapAssetDocument(asset));
   }
 
   /**
@@ -30,14 +59,20 @@ class AssetService {
    * @returns Asset or null
    */
   async getAssetById(userId: string, assetId: string): Promise<Asset | null> {
-    const asset = await fileService.findById<Asset>(this.assetFilePath, assetId);
-    
-    // Check if asset exists and belongs to the user
-    if (!asset || asset.userId !== userId) {
+    if (!Types.ObjectId.isValid(assetId)) {
       return null;
     }
     
-    return asset;
+    const asset = await AssetModel.findOne({ 
+      _id: new Types.ObjectId(assetId),
+      userId 
+    }).exec();
+    
+    if (!asset) {
+      return null;
+    }
+    
+    return this.mapAssetDocument(asset);
   }
 
   /**
@@ -47,12 +82,14 @@ class AssetService {
    * @returns Created asset
    */
   async createAsset(userId: string, assetData: CreateAssetDTO): Promise<Asset> {
-    const newAsset = await fileService.create<Asset>(this.assetFilePath, {
+    const newAsset = new AssetModel({
       ...assetData,
-      userId,
+      userId
     });
     
-    return newAsset;
+    await newAsset.save();
+    
+    return this.mapAssetDocument(newAsset);
   }
 
   /**
@@ -67,20 +104,21 @@ class AssetService {
     assetId: string,
     assetData: UpdateAssetDTO
   ): Promise<Asset> {
-    // Check if asset exists and belongs to the user
-    const asset = await this.getAssetById(userId, assetId);
-    if (!asset) {
+    if (!Types.ObjectId.isValid(assetId)) {
+      throw new Error('Invalid asset ID');
+    }
+    
+    const updatedAsset = await AssetModel.findOneAndUpdate(
+      { _id: new Types.ObjectId(assetId), userId },
+      { $set: { ...assetData, updatedAt: new Date() } },
+      { new: true } // Return the updated document
+    ).exec();
+    
+    if (!updatedAsset) {
       throw new Error('Asset not found or does not belong to the user');
     }
     
-    // Update asset
-    const updatedAsset = await fileService.update<Asset>(
-      this.assetFilePath,
-      assetId,
-      assetData
-    );
-    
-    return updatedAsset;
+    return this.mapAssetDocument(updatedAsset);
   }
 
   /**
@@ -90,14 +128,39 @@ class AssetService {
    * @returns Whether deletion was successful
    */
   async deleteAsset(userId: string, assetId: string): Promise<boolean> {
-    // Check if asset exists and belongs to the user
-    const asset = await this.getAssetById(userId, assetId);
-    if (!asset) {
+    if (!Types.ObjectId.isValid(assetId)) {
+      throw new Error('Invalid asset ID');
+    }
+    
+    const result = await AssetModel.deleteOne({ 
+      _id: new Types.ObjectId(assetId), 
+      userId 
+    }).exec();
+    
+    if (result.deletedCount === 0) {
       throw new Error('Asset not found or does not belong to the user');
     }
     
-    // Delete asset
-    return fileService.delete<Asset>(this.assetFilePath, assetId);
+    return true;
+  }
+
+  /**
+   * Maps a Mongoose asset document to the Asset interface
+   * @param assetDoc Mongoose asset document
+   * @returns Asset object
+   */
+  private mapAssetDocument(assetDoc: any): Asset {
+    const asset = assetDoc.toObject();
+    return {
+      id: asset._id.toString(),
+      userId: asset.userId,
+      name: asset.name,
+      type: asset.type,
+      value: asset.value,
+      description: asset.description,
+      createdAt: asset.createdAt,
+      updatedAt: asset.updatedAt
+    };
   }
 }
 
