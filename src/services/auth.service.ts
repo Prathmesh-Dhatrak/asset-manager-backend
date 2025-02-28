@@ -1,20 +1,23 @@
-import fileService from './file.service';
-import config from '../config/app.config';
+// src/services/auth.service.ts
+import { Types } from 'mongoose';
+import UserModel, { UserDocument } from '../models/user.model';
 import { hashPassword, comparePassword } from '../utils/password.utils';
 import { generateToken } from '../utils/jwt.utils';
 import { User, UserDTO, CreateUserDTO, LoginDTO, AuthResponse } from '../types/user.types';
 
 class AuthService {
-    private readonly userFilePath = config.dataPath.users;
-
     /**
      * Converts a User to UserDTO (removes sensitive data)
      * @param user User with sensitive data
      * @returns UserDTO without sensitive data
      */
-    private toUserDTO(user: User): UserDTO {
-        const { password, ...userDTO } = user;
-        return userDTO;
+    private toUserDTO(user: UserDocument): UserDTO {
+        const userObj = user.toObject();
+        const { password, _id, ...rest } = userObj;
+        return {
+            id: _id.toString(),
+            ...rest
+        };
     }
 
     /**
@@ -33,14 +36,16 @@ class AuthService {
         const hashedPassword = await hashPassword(userData.password);
 
         // Create new user
-        const newUser = await fileService.create<User>(this.userFilePath, {
+        const newUser:any = new UserModel({
             ...userData,
             password: hashedPassword,
         });
+        
+        await newUser.save();
 
         // Generate token
         const token = generateToken({
-            id: newUser.id,
+            id: newUser._id.toString(),
             email: newUser.email,
         });
 
@@ -57,7 +62,7 @@ class AuthService {
      */
     async login(credentials: LoginDTO): Promise<AuthResponse> {
         // Find user by email
-        const user = await this.findUserByEmail(credentials.email);
+        const user: any = await this.findUserByEmail(credentials.email);
         if (!user) {
             throw new Error('Invalid email or password');
         }
@@ -70,7 +75,7 @@ class AuthService {
 
         // Generate token
         const token = generateToken({
-            id: user.id,
+            id: user._id.toString(),
             email: user.email,
         });
 
@@ -86,19 +91,21 @@ class AuthService {
      * @returns User DTO or null
      */
     async findUserById(id: string): Promise<UserDTO | null> {
-        const user = await fileService.findById<User>(this.userFilePath, id);
+        if (!Types.ObjectId.isValid(id)) {
+            return null;
+        }
+        
+        const user = await UserModel.findById(id).exec();
         return user ? this.toUserDTO(user) : null;
     }
 
     /**
      * Finds a user by email
      * @param email User email
-     * @returns User or null
+     * @returns User document or null
      */
-    async findUserByEmail(email: string): Promise<User | null> {
-        const users = await fileService.readData<User>(this.userFilePath);
-        const user = users.find((user) => user.email === email);
-        return user || null;
+    async findUserByEmail(email: string): Promise<UserDocument | null> {
+        return UserModel.findOne({ email: email.toLowerCase() }).exec();
     }
 }
 

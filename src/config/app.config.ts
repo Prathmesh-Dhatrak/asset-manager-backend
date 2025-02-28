@@ -9,6 +9,17 @@ const config = {
     users: 'src/data/users.json',
     assets: 'src/data/assets.json',
   },
+  mongodb: {
+    uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/asset-mgmt-db',
+    options: {
+      // Optional additional connection options
+    }
+  },
+  jwt: {
+    SECRET: "LJKKJSDFKLJKK*&*234234234",
+    JWT_EXPIRATION: "24h"
+  }
+
 };
 
 export default config;

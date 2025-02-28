@@ -1,7 +1,9 @@
 export type AssetType = 'real_estate' | 'stock' | 'cryptocurrency' | 'vehicle' | 'other';
+import { Types } from 'mongoose';
+
 
 export interface Asset {
-  id: string;
+  id?: string | Types.ObjectId;
   userId: string;
   name: string;
   type: AssetType;
