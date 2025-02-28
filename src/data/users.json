@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "username": "Pratos_User",
+    "email": "prathmesh_user@gmail.com",
+    "password": "$2b$10$4xLTii2tUWOVFDxfg9b5OuszWQ2qpjqOViZqfMkNn4ryujRY9oHim",
+    "id": "c5b83cb3-a1ec-49af-b9a4-dd9d6802adf2",
+    "createdAt": "2025-02-28T06:41:15.893Z",
+    "updatedAt": "2025-02-28T06:41:15.893Z"
+  }
+]
