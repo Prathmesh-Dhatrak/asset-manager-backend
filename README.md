@@ -8,6 +8,11 @@
 A Node.js backend for an asset management system with user authentication
 </p>
 
+<p align='center'>
+  <strong>Frontend Repository:</strong> <a href="https://github.com/Prathmesh-Dhatrak/asset-management-system">https://github.com/Prathmesh-Dhatrak/asset-management-system</a><br>
+  <strong>Backend Repository:</strong> <a href="https://github.com/Prathmesh-Dhatrak/asset-manager-backend">https://github.com/Prathmesh-Dhatrak/asset-manager-backend</a>
+</p>
+
 ## Features
 
 - User authentication (register, login, get current user)
